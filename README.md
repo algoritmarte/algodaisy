@@ -22,9 +22,9 @@ A simple skeleton program that demonstrates how to read/write the hardware.
 
 Firmware downloadable here: [PatchSkeleton.bin](firmwares/PatchSkeleton.bin) 
 
-## TorusPlus
+## Torus Plus
 
-The Toris Rings clone with some new extra features: delay, embedded random rythm/note generator,....
+The Torus Rings clone with some new extra features: delay, embedded random rythm/note generator,....
 
 * [TorusPlus source code](https://github.com/algoritmarte/algodaisy/tree/main/patch_algodaisy/TorusPlus)
 
