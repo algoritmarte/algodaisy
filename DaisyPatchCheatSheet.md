@@ -1,6 +1,6 @@
 # Daisy Patch Cheat Sheet
 
-Version 1.0
+Version 1.01
 
 Some information about the Daisy Patch that can be useful while becoming familiar with the Daisy platform. **It is not meant to be a substitute for official documentation** which should be read before: [Daisy Wiki documentation](https://github.com/electro-smith/DaisyWiki/wiki).
 
@@ -198,6 +198,7 @@ void UpdateControls()
   bool gate2_state = hw.gate_input[1].State();
   bool gate2_trig = hw.gate_input[1].Trig();
   
+
   float cv1_out = 2; // 2 volts
   hw.seed.dac.WriteValue(DacHandle::Channel::ONE,  (uint16_t)( cv1_out * 819.2f ) );
   
@@ -218,7 +219,85 @@ void UpdateScreen() {
 ## Timing
 
 	DaisyPatch::DelayMs(size_t del);  // delay del milliseconds
-	hw.seed.system.GetNow();          // current elapsed milliseconds ?!?
+	hw.seed.system.GetNow();          // current elapsed milliseconds
+
+## Performance meter
+
+Include the file:
+
+```
+#include "util/CpuLoadMeter.h"
+```
+
+Declare in the global section
+
+```
+CpuLoadMeter meter;
+```
+
+Initialize it in the main section:
+
+```
+int main(void) {
+  // ...
+  meter.Init( hw.AudioSampleRate(), hw.AudioBlockSize() );
+  hw.StartAdc();
+  hw.StartAudio( AudioCallback );
+  // ...
+}
+```
+
+In the audio callback routine at the beginning / end call `OnBlockStart()` /  `OnBlockEnd()`
+
+```
+void AudioCallback(AudioHandle::InputBuffer  in,
+                   AudioHandle::OutputBuffer out,
+                   size_t                    size)
+{
+	meter.OnBlockStart();
+	
+	// ...
+
+	meter.OnBlockEnd();
+}
+```
+
+Then you can call  
+`meter.GetMaxCpuLoad()` `meter.GetAvgCpuLoad()` `meter.GetMinCpuLoad()` 
+to get the Max / Avg / Min average CPU load in the range 0..1; for example to print them on the screen:
+
+
+```
+int main(void) {
+  // ...
+  // main loop
+  while (1) {
+            char buf[18] = {};
+            hw.display.Fill(false);
+            int line = 0;
+            
+            hw.display.SetCursor(0, line++ * 13);
+            float2str(buf, 0, 8, meter.GetMaxCpuLoad(), 3);
+            hw.display.WriteString(buf, Font_7x10, true);
+
+            hw.display.SetCursor(0, line++ * 13);
+            float2str(buf, 0, 8, meter.GetAvgCpuLoad(), 3);
+            hw.display.WriteString(buf, Font_7x10, true);
+
+            hw.display.Update();
+            hw.DelayMs(50);
+  }
+}
+```
+
+## Formatting numbers
+
+`sprintf`, `snprintf`, ... (`<cstdio>`) don't work with floats; if you want a lightweight replacement use the great Marco Paland's routines:
+
+[https://github.com/mpaland/printf](https://github.com/mpaland/printf)
+
+
+
 
 
 <a name="build"></a>
@@ -277,7 +356,7 @@ tasks.json
 Coming soon ... 
 
 * <strike>add a link to a fully working test patch</strike>
-* details on how to measure CPU workload
+* <strike>details on how to measure CPU workload</strike>
 * considerations about memory (where to alloc buffers)
 * how-to access SD-card / file system
 * menu(s)

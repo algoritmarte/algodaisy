@@ -20,8 +20,19 @@ A simple skeleton program that demonstrates how to read/write the hardware.
 
 * [PatchSkeleton source code](https://github.com/algoritmarte/algodaisy/tree/main/patch_algodaisy/PatchSkeleton)
 
+Firmware downloadable here: [PatchSkeleton.bin](firmwares/PatchSkeleton.bin) 
+
+## TorusPlus
+
+The Toris Rings clone with some new extra features: delay, embedded random rythm/note generator,....
+
+* [TorusPlus source code](https://github.com/algoritmarte/algodaisy/tree/main/patch_algodaisy/TorusPlus)
+
+Firmware downloadable here: [TorusPlus.bin](firmwares/TorusPlus.bin) 
+
 ## History
 
 ```
+2022-01-22: TorusPlus
 2022-01-18: first commit, cheat sheet and patchskeleton
 ```
