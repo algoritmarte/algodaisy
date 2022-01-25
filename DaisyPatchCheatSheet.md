@@ -1,6 +1,6 @@
 # Daisy Patch Cheat Sheet
 
-Version 1.01
+Version 1.02
 
 Some information about the Daisy Patch that can be useful while becoming familiar with the Daisy platform. **It is not meant to be a substitute for official documentation** which should be read before: [Daisy Wiki documentation](https://github.com/electro-smith/DaisyWiki/wiki).
 
@@ -13,7 +13,7 @@ Sections:
 
 If you find errors or have suggestions contact me: development [at] algoritmarte [dot] com
 
-Latest version can be found on [github](https://github.com/algoritmarte/algodaisy)
+Latest version can be found on [github](https://github.com/algoritmarte/algodaisy). Use a Markdown viewer to open this file for better readability.
 
 <a name="hw"></a>
 # 1. Hardware hints
@@ -108,6 +108,56 @@ hw.seed.SetLed( true );
 hw.seed.SetLed( false );
 
 ```
+
+## Memory
+
+Memory stuff defined in `libDaisy/src/sys/system.cpp`
+
+
+| Region         | Start     | Size(hex)| Size |
+|----------------|-----------|----------|------|
+|           FLASH|           |0x20000   |128 KB|
+|         DTCMRAM|           |          |128 KB|
+|            SRAM|           |          |512 KB|
+|          RAM_D2|           |          |288 KB|
+|          RAM_D3|           |          |64 KB |
+|         ITCMRAM|           |          |64 KB |
+|           SDRAM|0xC0000000 |0x4000000| 64 MB |
+|       QSPIFLASH|           |          |8 MB  |
+
+
+In order to alloc some space on the SDRAM use the `DSY_SDRAM_BSS` modifier:
+
+```
+// 10 second delay line on the external SDRAM
+#define MAX_DELAY ((size_t)(10.0f * 48000.0f))
+daisysp::DelayLine<float, MAX_DELAY> DSY_SDRAM_BSS delay;
+
+// 16K buffer
+#define MYBUFSIZE 16384
+uint8_t DSY_SDRAM_BSS mybuf[MYBUFSIZE];
+```
+
+Note that there is no `malloc/free` (on embedded systems, memory should be used very carefully); but for most purposes (*when you are sure that objects are allocated only once dynamically*), a simple trivial wrapper could do the job:
+
+```
+int memAllocated = 0;
+void *malloc( size_t numbytes ) {
+	if ( memAllocated + numbytes > MYBUFSIZE ) return 0;
+	void *res = & mybuf[ memAllocated ];
+	memAllocated += numbytes;
+	return res;
+}
+void free(void *mem) { /* donothing*/ }
+```
+
+
+
+If your program takes >99.0% of the FLASH memory: you can try to add  
+```
+OPT = -Os
+```  
+to your Makefile anywhere above the include `$(SYSTEM_FILES_DIR)/Makefile` line to compile with optimization targeted to reduce code size. Sometimes that may break things, but sometimes you can reduce the size up to ~15 KB. 
 
 <a name="sw"></a>
 # 2. Software hints
@@ -357,7 +407,9 @@ Coming soon ...
 
 * <strike>add a link to a fully working test patch</strike>
 * <strike>details on how to measure CPU workload</strike>
-* considerations about memory (where to alloc buffers)
+* <strike>considerations about memory (where to alloc buffers)</strike>
 * how-to access SD-card / file system
+* MIDI read/write
 * menu(s)
+* daisy library
 * hardware abstraction
