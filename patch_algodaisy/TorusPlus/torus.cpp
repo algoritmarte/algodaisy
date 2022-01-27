@@ -109,7 +109,7 @@ MappedFloatValue delaymixFloatValue(0,1,0.3f, MappedFloatValue::Mapping::lin, ""
 
 // plus menu
 MappedFloatValue brightnessFloatValue( 0.f, 1.f, 0.5f, MappedFloatValue::Mapping::lin, "", 2  );
-MappedFloatValue bmpFloatValue( 5, 200, 120);
+MappedFloatValue bmpFloatValue( 2, 200, 120);
 MappedFloatValue zoomFloatValue( 0.1, 5, 2.f, MappedFloatValue::Mapping::lin, "", 2  );
 MappedIntValue baseIntValue( 0, 12, 0.0f, 1, 1 );
 MappedFloatValue randFloatValue( 0, 5, 1.f, MappedFloatValue::Mapping::lin, "", 1 );

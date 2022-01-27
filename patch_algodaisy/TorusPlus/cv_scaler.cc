@@ -137,7 +137,7 @@ void CvScaler::Read(Patch* patch, PerformanceState* performance_state) {
   performance_state->fm = fm_cv_ * 0;
   CONSTRAIN(performance_state->fm, -48.0f, 48.0f);
   
-  float transpose = 60.0f * adc_lp_[POT_FREQUENCY];
+  float transpose = 60.0f * (adc_lp_[POT_FREQUENCY] - 0.5f);
   float hysteresis = transpose - transpose_ > 0.0f ? -0.3f : +0.3f;
   transpose_ = static_cast<int32_t>(transpose + hysteresis + 0.5f);
   
@@ -146,16 +146,16 @@ void CvScaler::Read(Patch* patch, PerformanceState* performance_state) {
   
   ////performance_state->note = adc_lp_[POT_FREQUENCY] * 48.0f;
   ////performance_state->tonic = 12.0f + transpose_;
-  float quantized = (int)(transpose + 0.5);
-  performance_state->note = 0;
-  performance_state->tonic = 12.0f + quantized;
+  int quantized = static_cast<int>(transpose + ((transpose >= 0)? 0.5 : -0.5f) );
+  performance_state->note = quantized;
+  performance_state->tonic = 48.0f; // should use another configuration parameter and adjust this via encoder
     
   // Strumming / internal exciter triggering logic.    
 
   if (performance_state->internal_note) {
     // Remove quantization when nothing is plugged in the V/OCT input.
     performance_state->note = 0.0f;
-    performance_state->tonic = 12.0f + transpose;
+    performance_state->tonic = 48.0f + transpose;
   }
   
   // Hysteresis on chord.
