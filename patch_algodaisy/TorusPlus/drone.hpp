@@ -26,8 +26,10 @@ struct Drone {
     float v_noise = 0;
 
     int v_beat = 0;
-    int v_pulse = 0;
-    int v_note = -1;
+    int v_pulse1 = 0;
+    int v_pulse2 = 0;
+    int v_note1 = -1;
+    int v_note2 = -1;
 
     float tick = 0;
     float tickoff = 0;
@@ -47,7 +49,7 @@ struct Drone {
     }
 
     void ProcessCV() {
-        v_pulse = 0;
+        v_pulse1 = v_pulse2 = 0;
         
         float elapsed = tickoff + tick / cvRate; // secs elapsed
         tickoff = 0;
@@ -60,20 +62,19 @@ struct Drone {
 
             if ( testMode ) {
                 if (v_beat == 0) {
-                    v_pulse = 1;
-                    v_note = test_notes[ itest++ % 8];
+                    v_pulse1 = 1;
+                    v_note1 = test_notes[ itest++ % 8];
                 }
             } else {
                 eset.Step();
                 if ( eset.m_values[0] || eset.m_values[1] ) {
-                    v_pulse = 1;
-                    v_note = cliff.NextNote( 0 ); 
-                } else {
-                    if ( eset.m_values[2] || eset.m_values[3] ) {
-                        v_pulse = 1;
-                        v_note = cliff.NextNote( 1 ); 
-                    }
-                }                
+                    v_pulse1 = 1;
+                    v_note1 = cliff.NextNote( 0 ); 
+                }                 
+                if ( eset.m_values[2] || eset.m_values[3] ) {
+                    v_pulse2 = 1;
+                    v_note2 = cliff.NextNote( 1 ); 
+                }                               
             }
         }
         tick++;

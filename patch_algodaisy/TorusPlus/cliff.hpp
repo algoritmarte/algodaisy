@@ -6,17 +6,18 @@
 
 using namespace sandrack;
 
-#define CLIFFLEN 10
+#define MAXCLIFFLEN 10
 #define NUMCOEFF 8
+#define NUMSCALES 4 
 
 struct Cliff
 {
-    int diatonic[CLIFFLEN]
-        = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16 };
-
-//        = {0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24};
-//    int diatonic[CLIFFLEN]
-//        = {0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22, 24};
+    const int cliffscales[NUMSCALES][MAXCLIFFLEN] {
+        {0, 2, 4, 5, 7,  9, 11, 12, 14, 16 },
+        {0, 2, 3, 5, 7,  8, 10, 12, 14, 15 },
+        {0, 2, 4, 7, 9, 12, 14, 16, 19, 21 },
+        {0, 1, 3, 5, 7,  8, 10, 12, 13, 15 },
+    };
 
     float x;
     float y;
@@ -24,6 +25,7 @@ struct Cliff
 
     float cliffzoom = 3;
     int base = 0;
+    int cliffscale = 0;
 
     void Randomize()
     {
@@ -54,13 +56,13 @@ struct Cliff
         int note = 0;
         if(ch == 0)
         {
-            note = diatonic[( base + fround(std::abs(x * cliffzoom)))
-                              % CLIFFLEN];
+            note = cliffscales[cliffscale][( base + fround(std::abs(x * cliffzoom)))
+                              % MAXCLIFFLEN];
         }
         else
         {
-            note = diatonic[(base + fround(std::abs(y * cliffzoom)))
-                              % CLIFFLEN] + 12;
+            note = cliffscales[cliffscale][(base + fround(std::abs(y * cliffzoom)))
+                              % MAXCLIFFLEN] + 12;
         }
         return note;
     }

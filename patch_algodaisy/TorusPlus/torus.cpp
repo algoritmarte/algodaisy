@@ -40,6 +40,7 @@ FullScreenItemMenu controlEditMenu;
 FullScreenItemMenu boolEditMenu;
 FullScreenItemMenu normEditMenu;
 FullScreenItemMenu plusEditMenu;
+FullScreenItemMenu modEditMenu;
 UiEventQueue       eventQueue;
 DaisyPatch         hw;
 
@@ -58,15 +59,17 @@ Part            part;
 StringSynthPart string_synth;
 Strummer        strummer;
 
-const int                kNumMainMenuItems        = 11;
+const int                kNumMainMenuItems        = 13;
 const int                kNumControlEditMenuItems = 5;
 const int                kNumNormEditMenuItems    = 5;
-const int                kPlusEditMenuItems       = 6;
+const int                kPlusEditMenuItems       = 7;
+const int                kModEditMenuItems        = 4;
 
 AbstractMenu::ItemConfig mainMenuItems[kNumMainMenuItems];
 AbstractMenu::ItemConfig controlEditMenuItems[kNumControlEditMenuItems];
 AbstractMenu::ItemConfig normEditMenuItems[kNumNormEditMenuItems];
 AbstractMenu::ItemConfig plusEditMenuItems[kPlusEditMenuItems];
+AbstractMenu::ItemConfig modEditMenuItems[kModEditMenuItems];
 
 // control menu items
 const char* controlListValues[]
@@ -113,6 +116,26 @@ MappedFloatValue bmpFloatValue( 2, 200, 120);
 MappedFloatValue zoomFloatValue( 0.1, 5, 2.f, MappedFloatValue::Mapping::lin, "", 2  );
 MappedIntValue baseIntValue( 0, 12, 0.0f, 1, 1 );
 MappedFloatValue randFloatValue( 0, 5, 1.f, MappedFloatValue::Mapping::lin, "", 1 );
+const char *scaleList[NUMSCALES] = {
+  "Maj", "Min", "Pent", "Phry"
+};
+MappedStringListValue scaleListValue( scaleList, NUMSCALES, 0 );
+
+MappedFloatValue audiomixFloatValue( 0, 1, 0.25f, MappedFloatValue::Mapping::lin,"", 2 );
+
+// mod menu
+enum MODTYPE {
+  MODTYPE_LFO,
+  MODTYPE_RAND,
+  MODTYPE_BASS
+};
+const char*           modtypeListValues[]
+    = {"LFO", "RAND", "Bassline" };
+
+MappedStringListValue modtypeListValue( modtypeListValues, 3, 0 );
+static Oscillator lfo;
+MappedFloatValue modgainFloatValue( 0, 1, 0.5f, MappedFloatValue::Mapping::lin,"", 2 );
+MappedFloatValue modfreqFloatValue( 0.01, 2, 0.2f, MappedFloatValue::Mapping::lin,"", 2 );
 
 bool randSequence = false;
 
@@ -146,7 +169,7 @@ void InitUiPages()
     // ====================================================================
     // The main menu
     // ====================================================================
-
+    
     mainMenuItems[0].type = daisy::AbstractMenu::ItemType::valueItem;
     mainMenuItems[0].text = "Brightness";
     mainMenuItems[0].asMappedValueItem.valueToModify = &brightnessFloatValue;
@@ -171,25 +194,33 @@ void InitUiPages()
     mainMenuItems[5].text = "Dly mix";
     mainMenuItems[5].asMappedValueItem.valueToModify = &delaymixFloatValue;
 
-    mainMenuItems[7].type = daisy::AbstractMenu::ItemType::openUiPageItem;
-    mainMenuItems[7].text = "Plus";
-    mainMenuItems[7].asOpenUiPageItem.pageToOpen = &plusEditMenu;
-
     mainMenuItems[6].type = daisy::AbstractMenu::ItemType::openUiPageItem;
-    mainMenuItems[6].text = "Normalize";
-    mainMenuItems[6].asOpenUiPageItem.pageToOpen = &normEditMenu;
+    mainMenuItems[6].text = "Plus";
+    mainMenuItems[6].asOpenUiPageItem.pageToOpen = &plusEditMenu;
+
+    mainMenuItems[7].type = daisy::AbstractMenu::ItemType::openUiPageItem;
+    mainMenuItems[7].text = "Mod";
+    mainMenuItems[7].asOpenUiPageItem.pageToOpen = &modEditMenu;
 
     mainMenuItems[8].type = daisy::AbstractMenu::ItemType::valueItem;
-    mainMenuItems[8].text = "Easter FX";
-    mainMenuItems[8].asMappedValueItem.valueToModify = &eggListValue;
+    mainMenuItems[8].text = "Audio Mix";
+    mainMenuItems[8].asMappedValueItem.valueToModify = &audiomixFloatValue;
 
-    mainMenuItems[9].type = daisy::AbstractMenu::ItemType::checkboxItem;
-    mainMenuItems[9].text = "Mono out";
-    mainMenuItems[9].asCheckboxItem.valueToModify = &monoOutput;
+    mainMenuItems[9].type = daisy::AbstractMenu::ItemType::openUiPageItem;
+    mainMenuItems[9].text = "Normalize";
+    mainMenuItems[9].asOpenUiPageItem.pageToOpen = &normEditMenu;
 
-    mainMenuItems[10].type = daisy::AbstractMenu::ItemType::openUiPageItem;
-    mainMenuItems[10].text = "Controls";
-    mainMenuItems[10].asOpenUiPageItem.pageToOpen = &controlEditMenu;
+    mainMenuItems[10].type = daisy::AbstractMenu::ItemType::valueItem;
+    mainMenuItems[10].text = "Easter FX";
+    mainMenuItems[10].asMappedValueItem.valueToModify = &eggListValue;
+
+    mainMenuItems[11].type = daisy::AbstractMenu::ItemType::checkboxItem;
+    mainMenuItems[11].text = "Mono out";
+    mainMenuItems[11].asCheckboxItem.valueToModify = &monoOutput;
+
+    mainMenuItems[12].type = daisy::AbstractMenu::ItemType::openUiPageItem;
+    mainMenuItems[12].text = "Controls";
+    mainMenuItems[12].asOpenUiPageItem.pageToOpen = &controlEditMenu;
 
     mainMenu.Init(mainMenuItems, kNumMainMenuItems);
 
@@ -261,19 +292,42 @@ void InitUiPages()
     plusEditMenuItems[2].text = "Note offs.";
     plusEditMenuItems[2].asMappedValueItem.valueToModify = &baseIntValue;
 
-    plusEditMenuItems[3].type = daisy::AbstractMenu::ItemType::checkboxItem;
-    plusEditMenuItems[3].text = "Randomize";
-    plusEditMenuItems[3].asCheckboxItem.valueToModify = &randSequence;
+    plusEditMenuItems[3].type = daisy::AbstractMenu::ItemType::valueItem;
+    plusEditMenuItems[3].text = "Scale";
+    plusEditMenuItems[3].asMappedValueItem.valueToModify = &scaleListValue;
 
     plusEditMenuItems[4].type = daisy::AbstractMenu::ItemType::checkboxItem;
-    plusEditMenuItems[4].text = "Test Mode";
-    plusEditMenuItems[4].asCheckboxItem.valueToModify = &testMode;
+    plusEditMenuItems[4].text = "Randomize";
+    plusEditMenuItems[4].asCheckboxItem.valueToModify = &randSequence;
 
-    plusEditMenuItems[5].type = daisy::AbstractMenu::ItemType::closeMenuItem;
-    plusEditMenuItems[5].text = "Back";
+    plusEditMenuItems[5].type = daisy::AbstractMenu::ItemType::checkboxItem;
+    plusEditMenuItems[5].text = "Test Mode";
+    plusEditMenuItems[5].asCheckboxItem.valueToModify = &testMode;
+
+    plusEditMenuItems[6].type = daisy::AbstractMenu::ItemType::closeMenuItem;
+    plusEditMenuItems[6].text = "Back";
 
     plusEditMenu.Init( plusEditMenuItems, kPlusEditMenuItems );
 
+    // ====================================================================
+    // The "mod edit" menu
+    // ====================================================================
+    modEditMenuItems[0].type = daisy::AbstractMenu::ItemType::valueItem;
+    modEditMenuItems[0].text = "CV2 mode";
+    modEditMenuItems[0].asMappedValueItem.valueToModify = &modtypeListValue;
+
+    modEditMenuItems[1].type = daisy::AbstractMenu::ItemType::valueItem;
+    modEditMenuItems[1].text = "Mod. Freq";
+    modEditMenuItems[1].asMappedValueItem.valueToModify = &modfreqFloatValue;
+
+    modEditMenuItems[2].type = daisy::AbstractMenu::ItemType::valueItem;
+    modEditMenuItems[2].text = "Mod. Gain";
+    modEditMenuItems[2].asMappedValueItem.valueToModify = &modgainFloatValue;
+
+    modEditMenuItems[3].type = daisy::AbstractMenu::ItemType::closeMenuItem;
+    modEditMenuItems[3].text = "Back";
+
+    modEditMenu.Init( modEditMenuItems, kModEditMenuItems );
 }
 
 void GenerateUiEvents()
@@ -332,7 +386,7 @@ const float kNoiseGateThreshold = 0.00003f;
 float       in_level            = 0.0f;
 bool gatePulse = false;
 bool ledStatus = false;
-int gateCount = 0;
+int gate1Count = 0;
 int cvTicksPerMsec = 5;
 
 void AudioCallback(AudioHandle::InputBuffer  in,
@@ -403,28 +457,59 @@ void AudioCallback(AudioHandle::InputBuffer  in,
     if ( newZoom != drone.cliff.cliffzoom ) {
         drone.cliff.cliffzoom = newZoom;
     }
+    drone.cliff.cliffscale = scaleListValue.GetIndex();
     drone.cliff.base = baseIntValue.Get();
-    bool trigOut = false;
+    int modtype = modtypeListValue.GetIndex();
+
     drone.testMode = testMode;
     drone.ProcessCV();
-    if(drone.v_pulse > 0)
-    {
-        //outpulse.trigger();
-        //outputs[CV1_OUTPUT].setVoltage( (drone.v_note) / 12.0f );
-        //outputs[CV2_OUTPUT].setVoltage( drone.v_note );
-        //cliffNote = note;
-        hw.seed.dac.WriteValue(DacHandle::Channel::ONE,
-                              (uint16_t)round( ( drone.v_note / 12.f) * 819.2f));
-            //patch.seed.dac.WriteValue(DacHandle::Channel::TWO,
-            //                  round((values[stepNumber] / 12.f) * 819.2f));
-        gateCount = 3 * cvTicksPerMsec; // 3 msec gate
+
+    float cv1 = -1;
+    float cv2 = -1;
+    bool audiotrig = false;
+ 
+    if( drone.v_pulse2 > 0 ) {
+        cv1 = drone.v_note2 / 12.f;
+    }
+    if( drone.v_pulse1 > 0 ) {
+        if ( modtype != MODTYPE_BASS ) {
+            cv1 = drone.v_note1 / 12.f; // priority to "bass" note if not CV2=bass
+        } else {
+            cv2 = drone.v_note1 / 12.f; // cv2 = "bass"            
+        }
+        audiotrig = true;
+    }        
+
+    float modgain = modgainFloatValue.Get();
+    float modfreq = modfreqFloatValue.Get();
+
+    if ( modtype == MODTYPE_LFO ) {
+        lfo.SetFreq( modfreq );
+        cv2 = 2.5f * (lfo.Process() + 1.f) * modgain;
+        cv2 = clamp( cv2, 0.f, 5.0f);
     }
 
-    if ( gateCount > 0) {
-        trigOut = true;
-        gateCount--;
+    if ( modtype == MODTYPE_RAND ) {
+        if ( audiotrig ) {        
+            cv2 = frand(0.f,5.f) * modgain;
+            cv2 = clamp( cv2, 0.f, 5.0f);
+        }
     }
-    trigOut = (gateCount > 0);
+
+    if ( cv1 >= 0 )   
+    {
+        hw.seed.dac.WriteValue(DacHandle::Channel::ONE,(uint16_t)round( cv1 * 819.2f));
+        gate1Count = 3 * cvTicksPerMsec; // 3 msec gate
+    }
+    if ( cv2 >= 0 )   
+    {
+        hw.seed.dac.WriteValue(DacHandle::Channel::TWO,(uint16_t)round( cv2 * 819.2f));
+    }
+
+    if ( gate1Count > 0) {
+        gate1Count--;
+    }
+    bool trigOut = (gate1Count > 0);
     if ( trigOut !=  gatePulse ) {
         gatePulse = trigOut;
         dsy_gpio_write(&hw.gate_output, gatePulse );
@@ -433,27 +518,33 @@ void AudioCallback(AudioHandle::InputBuffer  in,
     ledStatus = drone.v_beat == 0;
     hw.seed.SetLed( ledStatus );
 
+    float audioMix = audiomixFloatValue.Get();
+    audioMix = audioMix * audioMix * 10.0f;
+
     for(size_t i = 0; i < size; i++)
     {
         float delsig = 0;
-        //float sig =  ( output[i] + aux[i] ) * 0.5;
 
          // Handle Delay
         delsig = delay.Read() * dly_feedback;
-        //delay.Write( sig + delsig * dly_feedback );
 
-        out[0][i] = output[i]  + delsig * dly_mix;
+        out[0][i] = output[i] + delsig * dly_mix;
         out[1][i] = aux[i] + delsig * dly_mix;
-        
+
         float mono = (out[0][i] + out[1][i]) * 0.5;
+
         delay.Write( mono );
 
         if ( monoOutput ) {
             out[0][i] = mono;
         }
+        out[0][i] += in[2][i] * audioMix;
+        out[1][i] += in[3][i] * audioMix; 
 
         drone.ProcessAudio();
-        out[2][i] = drone.v_noise * 0.1f;
+        out[2][i] = drone.v_noise * 0.09f;
+
+        out[3][i] = audiotrig? 0.7 : 0;
     }
 }
 
@@ -482,6 +573,10 @@ int main(void)
     cvTicksPerMsec = (int)( 1 + samplerate / (blocksize * 1000) ); 
     drone.Init( samplerate, samplerate / blocksize );
     delay.Init();       
+    lfo.Init( samplerate / blocksize );
+    lfo.SetWaveform(lfo.WAVE_SIN);
+    lfo.SetFreq(0.1);
+    lfo.SetAmp(1);
 
     hw.StartAdc();
     hw.StartAudio(AudioCallback);

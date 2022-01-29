@@ -28,11 +28,11 @@ struct EuclideSeq {
     }
 
     void Randomize() {
-        int len = 16;
+        int len = 2 * irand(4,12);
         //int steps = irand( 3, 12 );
-        int steps = irand( 2, 9 );
-        int shift = irand( 0, len-1);
-        float prob = frand( 0.75, 1 );
+        int steps = irand( 2, 2*len/3 );
+        int shift = irand( 0, len/2);
+        float prob = frand( 0.66, 1 );
         Configure( len, steps, shift, prob );
     }
 
