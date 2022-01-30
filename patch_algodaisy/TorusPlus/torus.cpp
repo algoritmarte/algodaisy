@@ -121,7 +121,7 @@ const char *scaleList[NUMSCALES] = {
 };
 MappedStringListValue scaleListValue( scaleList, NUMSCALES, 0 );
 
-MappedFloatValue audiomixFloatValue( 0, 1, 0.25f, MappedFloatValue::Mapping::lin,"", 2 );
+MappedFloatValue audiomixFloatValue( 0, 2.0f, 0.25f, MappedFloatValue::Mapping::lin,"", 2 );
 
 // mod menu
 enum MODTYPE {
@@ -519,6 +519,12 @@ void AudioCallback(AudioHandle::InputBuffer  in,
     hw.seed.SetLed( ledStatus );
 
     float audioMix = audiomixFloatValue.Get();
+    float attMix = 1;
+    if (audioMix > 1) { 
+        attMix = 2-audioMix;
+        if ( attMix < 0) attMix = 0; 
+        audioMix = 1;
+    }
     audioMix = audioMix * audioMix * 10.0f;
 
     for(size_t i = 0; i < size; i++)
@@ -537,6 +543,10 @@ void AudioCallback(AudioHandle::InputBuffer  in,
 
         if ( monoOutput ) {
             out[0][i] = mono;
+        }
+        if (attMix < 1) {
+            out[0][i] *= attMix;
+            out[1][i] *= attMix;
         }
         out[0][i] += in[2][i] * audioMix;
         out[1][i] += in[3][i] * audioMix; 

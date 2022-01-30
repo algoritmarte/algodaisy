@@ -66,13 +66,13 @@ struct EuclideSet {
     int m_values[EUC_NUMSEQ] = {};
 
     void Init() {
-
     }
 
     void Randomize() {
         for (int i = 0; i < EUC_NUMSEQ; i++ ) {
             seqs[i].Randomize();
         }
+        seqs[0].m_seqshift = 0; // force shift = 0 on the first sequence
     }
 
     void Step() {

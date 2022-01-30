@@ -62,8 +62,8 @@ struct Drone {
 
             if ( testMode ) {
                 if (v_beat == 0) {
-                    v_pulse1 = 1;
-                    v_note1 = test_notes[ itest++ % 8];
+                    v_pulse2 = 1;
+                    v_note2 = test_notes[ itest++ % 8];
                 }
             } else {
                 eset.Step();
