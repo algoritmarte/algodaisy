@@ -49,11 +49,25 @@ The CV\_Input voltage is divided by 5 and added to the corresponding Knob_Positi
 Knob_Position (0=all way down, 1=all way up)
 CV_Input (-5,+5 Volt)
     
+
+
+
 Knob_Value = Knob_Position + CV_Input / 5.0
 Knob_Value = clamp( Knob_Value, 0, 1 )  // restrict it to [0,1]
 ```
 
 For example if a Knob is fully turned CCW (left) and a CV of 1 volt is applied then the value of the knob is 0.200
+
+**Tip**: beware that _the hardware is not that accurate_ (a ~4% error is not so rare); for some parameters/CV you may want to make sure that a knob is 0 when it is fully CCW or 1 when it is fully CW (or 0.5 if it's at 12 o'clock), so you should consider to clamp it to 0/1 if the value read is near those positions.
+
+```
+float knob1Value = hw.GetKnobValue(DaisyPatch::CTRL_1);
+if ( knob1Value < 0.05f ) knob1Value = 0.f;
+  else
+    if ( knob1Value > 0.95f ) knob1Value = 1.f;
+// ... or define it as an inline function
+```
+Also condìsider that the values read are often "floating" a little bit so be sure to add some LP filtering if the operations linked to the change of their values are computational expensive.
 
 
 
@@ -104,6 +118,7 @@ hw.display.Update();
 Lil cute small led ...
 
 ```
+
 hw.seed.SetLed( true );
 hw.seed.SetLed( false );
 
@@ -391,11 +406,21 @@ STM32H750x.svd
 tasks.json
 ```
 
+## Creating a new program
+
+In order to create a new program you can use the helper.py program in the DaisyExamples root directory:
+
+```
+./helper.py create patch/MyProgram --board patch
+```
+
+
 
 <a name="links"></a>
 # Useful links documentation/stuff
 
 
+- [libDaisy official documentation](https://electro-smith.github.io/libDaisy/index.html)
 
 - [Main Daisy Patch control code daisy_patch.cpp](https://github.com/electro-smith/libDaisy/blob/master/src/daisy_patch.cpp)
 
