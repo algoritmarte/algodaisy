@@ -1,6 +1,6 @@
 # Daisy Patch Cheat Sheet
 
-Version 1.02
+Version 1.03
 
 Some information about the Daisy Patch that can be useful while becoming familiar with the Daisy platform. **It is not meant to be a substitute for official documentation** which should be read before: [Daisy Wiki documentation](https://github.com/electro-smith/DaisyWiki/wiki).
 
@@ -49,6 +49,10 @@ The CV\_Input voltage is divided by 5 and added to the corresponding Knob_Positi
 Knob_Position (0=all way down, 1=all way up)
 CV_Input (-5,+5 Volt)
     
+
+
+
+
 
 
 
@@ -247,6 +251,7 @@ void UpdateControls()
   // shortcut for: hw.ProcessDigitalControls(); hw.ProcessAnalogControls();
   
   //read knob values
+
   float ctrl[4];
   for(int i = 0; i < 4; i++)
   {
@@ -355,6 +360,100 @@ int main(void) {
 }
 ```
 
+## MIDI In/Out
+In order to use MIDI you must call `hw.midi.StartReceive()` and regularly check if new events are received with `hw.midi.Listen()` and `hw.midi.HasEvents()`.
+
+A typical program skeleton is:
+
+```
+int main(void)
+{
+	hw.Init();
+	hw.midi.StartReceive(); // start MIDI receieve
+	hw.StartAdc();
+	hw.StartAudio(AudioCallback);
+	while(1) {
+   	    // fetch data from uart
+		hw.midi.Listen();          
+		// Handle MIDI Events
+        while(hw.midi.HasEvents())
+        {
+            HandleMidiMessage(hw.midi.PopEvent());
+        }
+	}
+}
+// Typical Switch case for Message Type.
+// implements a MIIMALISTIC monophonic MIDI to CV/gate converter
+void HandleMidiMessage(MidiEvent m)
+{
+    switch(m.type)
+    {
+        case NoteOn:
+        {
+            NoteOnEvent p = m.AsNoteOn();
+            // it's quite common to use a NoteOn event with velocity=0 
+            // as an alternative to NoteOff
+            if(m.data[1] != 0)
+            {
+                p = m.AsNoteOn();
+				int channel = p.channel;
+				int vel = p.velocity;
+				int midinote = p.note;
+				
+				midinote -= 36; // C2 as lowest note
+				if ( midinote < 0) midinote = 0;
+				
+				// write 1V/oct pitch on CV OUT 1
+				float v = 1.0f * midinote / 12.0f;
+				hw.seed.dac.WriteValue(DacHandle::Channel::ONE,
+						(uint16_t)( v * 819.2f ) );
+				dsy_gpio_write(&hw.gate_output, true);					
+            } else 
+            {   // m.data[1] == 0 is equivalent to a note off
+				dsy_gpio_write(&hw.gate_output, false);					            
+            }
+        }
+        break;
+        case NoteOff:
+        {
+	        NoteOffEvent p = m.AsNoteOff();
+			dsy_gpio_write(&hw.gate_output, false);					            
+        }
+        break;        
+        case ControlChange:
+        {
+            ControlChangeEvent p = m.AsControlChange();
+            switch(p.control_number)
+            {
+                case 1:
+                    // CC 1 handling ...
+                    break;
+                case 2:
+                    // CC 1 handling ...
+                    break;
+                default: break;
+            }
+            break;
+        }
+        default: break;
+    }
+}
+
+```
+
+If you want to send a MIDI message use:
+
+
+```
+hw.midi.SendMessage (uint8_t *bytes, size_t size ) 		
+```
+
+For further information see: 
+
+- [MidiHandler class reference](https://electro-smith.github.io/libDaisy/classdaisy_1_1_midi_handler.html)
+- [MidiEvent class reference](https://electro-smith.github.io/libDaisy/structdaisy_1_1_midi_event.html)
+
+
 ## Formatting numbers
 
 `sprintf`, `snprintf`, ... (`<cstdio>`) don't work with floats; if you want a lightweight replacement use the great Marco Paland's routines:
@@ -433,8 +532,8 @@ Coming soon ...
 * <strike>add a link to a fully working test patch</strike>
 * <strike>details on how to measure CPU workload</strike>
 * <strike>considerations about memory (where to alloc buffers)</strike>
+* <strike>MIDI read/write</strike>
 * how-to access SD-card / file system
-* MIDI read/write
 * menu(s)
 * daisy library
 * hardware abstraction
