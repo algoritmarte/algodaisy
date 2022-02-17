@@ -56,6 +56,7 @@ CV_Input (-5,+5 Volt)
 
 
 
+
 Knob_Value = Knob_Position + CV_Input / 5.0
 Knob_Value = clamp( Knob_Value, 0, 1 )  // restrict it to [0,1]
 ```
@@ -361,7 +362,7 @@ int main(void) {
 ```
 
 ## MIDI In/Out
-In order to use MIDI you must call `hw.midi.StartReceive()` and regularly check if new events are received with `hw.midi.Listen()` and `hw.midi.HasEvents()`. You should  also process the events received with `hw.midi.PopEvent()` in order to prevent it from filling up.
+In order to use MIDI you must call `hw.midi.StartReceive()` and regularly check if new events are received with `hw.midi.Listen()` and `hw.midi.HasEvents()`. You should  also process the events received with `hw.midi.PopEvent()` in order to prevent the queue from filling up.
 
 A typical program skeleton is:
 
