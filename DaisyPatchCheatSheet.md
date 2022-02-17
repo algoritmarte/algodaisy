@@ -361,7 +361,7 @@ int main(void) {
 ```
 
 ## MIDI In/Out
-In order to use MIDI you must call `hw.midi.StartReceive()` and regularly check if new events are received with `hw.midi.Listen()` and `hw.midi.HasEvents()`.
+In order to use MIDI you must call `hw.midi.StartReceive()` and regularly check if new events are received with `hw.midi.Listen()` and `hw.midi.HasEvents()`. You should  also process the events received with `hw.midi.PopEvent()` in order to prevent it from filling up.
 
 A typical program skeleton is:
 
