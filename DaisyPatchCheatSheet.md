@@ -43,19 +43,11 @@ DaisyPatch hw;
 
 ## CV Inputs and Knobs
 
-The CV\_Input voltage is divided by 5 and added to the corresponding Knob_Position; the result is the clamped to [0,1]
+The CV\_Input voltage is divided by 5 and added to the corresponding Knob_Position; the result is then clamped to [0,1]
 
 ```
 Knob_Position (0=all way down, 1=all way up)
 CV_Input (-5,+5 Volt)
-    
-
-
-
-
-
-
-
 
 Knob_Value = Knob_Position + CV_Input / 5.0
 Knob_Value = clamp( Knob_Value, 0, 1 )  // restrict it to [0,1]
@@ -115,6 +107,18 @@ hw.display.SetCursor(0, line * 13 );
 hw.display.WriteString("Hello world", Font_7x10, true);       
 //...
 hw.display.Update();
+```
+
+Available fonts:
+
+```
+libDaisy\src\util\oled_fonts.c:FontDef
+/** These are the different sizes of fonts
+(width x height in pixels per character) */
+extern FontDef Font_6x8;
+extern FontDef Font_7x10;  /**< & */
+extern FontDef Font_11x18; /**< & */
+extern FontDef Font_16x26; /**< & */
 ```
 
 
@@ -289,9 +293,16 @@ void UpdateScreen() {
 
 ## Timing
 
-	DaisyPatch::DelayMs(size_t del);  // delay del milliseconds
-	hw.seed.system.GetNow();          // current elapsed milliseconds
+```
+DaisyPatch::DelayMs(uint32_t msec);  // delay del milliseconds
+DaisyPatch::DelayUs(uint32_t usec);  // delay del microseconds
 
+# example:
+hw.DelayMs(50);
+
+uint32_t hw.seed.system.GetNow(); // current elapsed milliseconds
+uint32_t hw.seed.system.GetUs();  // current elapsed microseconds
+```
 ## Performance meter
 
 Include the file:
@@ -473,7 +484,7 @@ The full toolchain can be downloaded here: [Daisy Toolchain](https://github.com/
 Note if you already have a MSYS2/MINGW64 installation you can simply add the bin directory of the toolchain to the PATH:
 
 ```
-PATH=$PATH:/D/SDK/DaisyToolchain-0.3.1/windows/bin
+PATH=$PATH:/D/SDK/DaisyToolchain-0.3.3/windows/bin
 export PATH
 ```
 
@@ -534,6 +545,7 @@ Coming soon ...
 * <strike>details on how to measure CPU workload</strike>
 * <strike>considerations about memory (where to alloc buffers)</strike>
 * <strike>MIDI read/write</strike>
+* load/save configuration parameters
 * how-to access SD-card / file system
 * menu(s)
 * daisy library
