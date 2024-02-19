@@ -93,7 +93,10 @@ Model: SSD130x ( 128 x 64 Dot Matrix OLED/PLED Segment/Common Driver with Contro
 
 ```
 Resolution: 128x64 pixels
-Charachters using Font_7x10: 18x5 (Columns x Rows)
+
+Characters using Font_7x10:  18x5 (Columns x Rows)
+Characters using Font_11x18: 11x3
+Characters using Font_6x8:   21x8
 ```
 
 ### Drawing/printing
@@ -103,8 +106,10 @@ hw.display.Fill(false);
 hw.display.DrawLine(0, 10, 128, 10, true);
 //...
 int line = 0;
-hw.display.SetCursor(0, line * 13 );
+hw.display.SetCursor(0, line++ * 13 );
 hw.display.WriteString("Hello world", Font_7x10, true);       
+hw.display.SetCursor(0, line++ * 13 );
+hw.display.WriteString("Inverse string", Font_7x10, false);       
 //...
 hw.display.Update();
 ```
@@ -264,9 +269,11 @@ void UpdateControls()
   }
   
   //process encoder
-  bool encoder_held = hw.encoder.Pressed();
-  bool encoder_press = hw.encoder.RisingEdge();    
+  bool encoder_helddown = hw.encoder.Pressed();
+  bool encoder_pressed = hw.encoder.RisingEdge();    
   int encoder_inc = hw.encoder.Increment();
+  bool encoder_released = hw.encoder.FallingEdge();    
+  float encoder_timeheld = hw.encoder.TimeHeldMs();    
 
   bool gate1_state = hw.gate_input[0].State();
   bool gate1_trig = hw.gate_input[0].Trig();
