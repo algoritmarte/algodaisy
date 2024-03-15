@@ -86,11 +86,11 @@ The Patch uses an AK4556 3V 192kHz 24bit codec chip. The (hot) level at AUDIO in
 
 ### !Audio inputs normalization!
 
-Beware that audio inputs are **normalized** `1->2->3->4.` If an input is NOT connected, it will receive the same audio signal as the previous one.
+Beware that audio inputs are **normalized** `1->2->3->4.` If an input is NOT connected, it will receive the same audio signal of the previous one.
 
 Example 1: if you put a jack in IN1 and leave the others unplugged, then in IN2, IN3, IN4 you'll have the same signal (and in the `AudioCallback` you'll have: `in[0]=in[1]=in[2]=in[3]` ).
 
-Example 2: if you put two jacks in IN1 and IN3 and leave the others unplugged, then IN2 will be the same signal as IN1 and IN3 will be the same signal as IN3 (in the `AudioCallback`: `in[0]=in[1]` and `in[2]=in[3]`)
+Example 2: if you put two jacks in IN1 and IN3 and leave the others unplugged, then IN2 will be the same signal as IN1 and IN4 will be the same signal as IN3 (in the `AudioCallback`: `in[0]=in[1]` and `in[2]=in[3]`)
 
 There is no way to know from software if a jack is connected or not, so the only way to "avoid" normalization (if it is an issue for your application) is to put grounded jacks in the unused inputs.
 
