@@ -1,6 +1,6 @@
 # Daisy Patch Cheat Sheet
 
-Version 1.03
+Version 1.04
 
 Some information about the Daisy Patch that can be useful while becoming familiar with the Daisy platform. **It is not meant to be a substitute for official documentation** which should be read before: [Daisy Wiki documentation](https://github.com/electro-smith/DaisyWiki/wiki).
 
@@ -20,7 +20,7 @@ Latest version can be found on [github](https://github.com/algoritmarte/algodais
 
 ## 1.1. Summary (voltages)
 
-Schematics can be downloaded here: [Daisy patch schematics](https://github.com/electro-smith/Hardware/tree/master/reference/daisy_patch)
+<strike>Schematics can be downloaded here: [Daisy patch schematics](https://github.com/electro-smith/Hardware/tree/master/reference/daisy_patch)</strike> *[update: the schematics are no longer available?!?]*
 
 In the follwing table `hw` is declared as
 
@@ -83,6 +83,16 @@ hw.seed.dac.WriteValue(DacHandle::Channel::ONE,  (uint16_t)( volt * 819.2f ) );
 ## AUDIO
 
 The Patch uses an AK4556 3V 192kHz 24bit codec chip. The (hot) level at AUDIO inputs is lowered (+/-5V to 3V) using 2 TL074, then raised again on output (3V to +/-5V) using 2 TL074. (*NdA: is it correct ?!?*).
+
+### !Audio inputs normalization!
+
+Beware that audio inputs are **normalized** `1->2->3->4.` If an input is NOT connected, it will receive the same audio signal as the previous one.
+
+Example 1: if you put a jack in IN1 and leave the others unplugged, then in IN2, IN3, IN4 you'll have the same signal (and in the `AudioCallback` you'll have: `in[0]=in[1]=in[2]=in[3]` ).
+
+Example 2: if you put two jacks in IN1 and IN3 and leave the others unplugged, then IN2 will be the same signal as IN1 and IN3 will be the same signal as IN3 (in the `AudioCallback`: `in[0]=in[1]` and `in[2]=in[3]`)
+
+There is no way to know from software if a jack is connected or not, so the only way to "avoid" normalization (if it is an issue for your application) is to put grounded jacks in the unused inputs.
 
 
 ## OLED
@@ -327,6 +337,7 @@ CpuLoadMeter meter;
 Initialize it in the main section:
 
 ```
+
 int main(void) {
   // ...
   meter.Init( hw.AudioSampleRate(), hw.AudioBlockSize() );
@@ -542,7 +553,7 @@ In order to create a new program you can use the helper.py program in the DaisyE
 
 - [Main Daisy Patch control code daisy_patch.cpp](https://github.com/electro-smith/libDaisy/blob/master/src/daisy_patch.cpp)
 
-- [Daisy patch schematics](https://github.com/electro-smith/Hardware/tree/master/reference/daisy_patch)
+- <strike>[Daisy patch schematics](https://github.com/electro-smith/Hardware/tree/master/reference/daisy_patch)</strike> *[update: the schematics are no longer available?!?]*
 
 # To-do
 
